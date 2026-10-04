@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Matrix of Coolness Quiz</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+  
+  :root {
+    --bg: #0f0f13;
+    --card: #1a1a24;
+    --accent: #6ee7b7;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+  }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .container {
+    max-width: 720px;
+    width: 100%;
+  }
+  
+  h1 {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+    background: linear-gradient(90deg, #6ee7b7, #93c5fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    margin-bottom: 32px;
+    font-size: 0.95rem;
+  }
+  
+  .progress {
+    height: 6px;
+    background: #2a2a38;
+    border-radius: 3px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #6ee7b7, #34d399);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  
+  .question {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+    line-height: 1.4;
+  }
+  
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .option {
+    background: #252532;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.98rem;
+  }
+  
+  .option:hover {
+    border-color: #4b5563;
+    background: #2d2d3d;
+  }
+  
+  .option.selected {
+    border-color: var(--accent);
+    background: rgba(110, 231, 183, 0.1);
+  }
+  
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 28px;
+  }
+  
+  button {
+    background: #374151;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  button:hover { background: #4b5563; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  
+  #nextBtn {
+    background: #059669;
+  }
+  #nextBtn:hover { background: #047857; }
+  
+  .result {
+    text-align: center;
+    display: none;
+  }
+  
+  .result h2 {
+    font-size: 2.4rem;
+    margin: 12px 0 4px;
+  }
+  
+  .coolness-score {
+    font-size: 3.8rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #6ee7b7, #34d399);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 8px 0 4px;
+  }
+  
+  .score-label {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+  }
+  
+  .score-box {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin: 24px 0;
+  }
+  
+  .score {
+    background: #252532;
+    padding: 16px 24px;
+    border-radius: 12px;
+    min-width: 140px;
+  }
+  
+  .score span {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  
+  .label-desc {
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.5;
+    margin-top: 12px;
+    margin-bottom: 32px;
+  }
+  
+  .matrix-container {
+    margin-top: 20px;
+    background: #12121a;
+    border-radius: 12px;
+    padding: 16px;
+  }
+  
+  .matrix-title {
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  
+  canvas {
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+    border-radius: 8px;
+    background: #0d0d14;
+  }
+  
+  .restart {
+    margin-top: 28px;
+    background: #4f46e5;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>The Matrix of Coolness</h1>
+  <p class="subtitle">32 subtle questions. One of 29 possible destinies.</p>
+  
+  <div class="progress"><div class="progress-bar" id="progress"></div></div>
+  
+  <div class="card" id="quizCard">
+    <div class="question" id="questionText"></div>
+    <div class="options" id="options"></div>
+    <div class="nav">
+      <button id="prevBtn" disabled>Back</button>
+      <button id="nextBtn" disabled>Next</button>
+    </div>
+  </div>
+  
+  <div class="card result" id="resultCard">
+    <p style="color:var(--muted); font-size:0.9rem;">You have been classified as</p>
+    <h2 id="finalLabel"></h2>
+    
+    <div class="coolness-score" id="coolnessScore"></div>
+    <div class="score-label">Coolness Score (1–100)</div>
+    
+    <div class="score-box">
+      <div class="score">
+        Effort
+        <span id="effortScore"></span>
+      </div>
+      <div class="score">
+        Authenticity
+        <span id="authScore"></span>
+      </div>
+    </div>
+    <p class="label-desc" id="labelDesc"></p>
+    
+    <div class="matrix-container">
+      <div class="matrix-title">Your position on the Matrix</div>
+      <canvas id="matrixCanvas" width="640" height="480"></canvas>
+    </div>
+    
+    <button class="restart" onclick="location.reload()">Take it again</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "You’re at a party. Someone starts playing a song you’ve never heard. What’s your move?",
+    opts: [
+      {t: "Quietly Shazam it and nod along like you’ve known it for years", e: 2, a: 1},
+      {t: "Ask the person who put it on what it is, genuinely curious", e: 1, a: 3},
+      {t: "Wait for something familiar and stay silent", e: 0, a: 2},
+      {t: "Start talking about how the algorithm is killing music", e: 3, a: 0}
+    ]
+  },
+  {
+    q: "A friend posts a highly curated vacation photo. Your first instinct is to…",
+    opts: [
+      {t: "Like it and keep scrolling", e: 0, a: 2},
+      {t: "Leave a thoughtful comment about the location", e: 1, a: 3},
+      {t: "Feel a slight pressure to post something equally impressive soon", e: 3, a: 0},
+      {t: "Screenshot it for later ‘inspiration’", e: 2, a: 1}
+    ]
+  },
+  {
+    q: "You discover a hole in your favorite shirt. You…",
+    opts: [
+      {t: "Wear it anyway — it’s character now", e: 0, a: 4},
+      {t: "Repair it carefully so no one notices", e: 2, a: 2},
+      {t: "Buy the exact same one online immediately", e: 3, a: 1},
+      {t: "Turn it into a ‘distressed’ fashion statement", e: 2, a: 1}
+    ]
+  },
+  {
+    q: "Someone asks what you do for fun. You answer with…",
+    opts: [
+      {t: "Something specific and slightly obscure that you actually do", e: 1, a: 4},
+      {t: "A safe, socially acceptable hobby", e: 2, a: 1},
+      {t: "Whatever you think will impress them most", e: 4, a: 0},
+      {t: "A vague ‘just vibing’ or ‘you know, the usual’", e: 1, a: 2}
+    ]
+  },
+  {
+    q: "You’re offered a free upgrade to first class on a flight. You…",
+    opts: [
+      {t: "Accept and act completely normal", e: 1, a: 3},
+      {t: "Accept and subtly mention it to someone later", e: 3, a: 1},
+      {t: "Decline because economy is ‘more real’", e: 2, a: 2},
+      {t: "Accept and immediately post a story about it", e: 4, a: 0}
+    ]
+  },
+  {
+    q: "A stranger compliments your shoes. Your internal reaction is…",
+    opts: [
+      {t: "Genuine surprise and a simple ‘thanks’", e: 0, a: 4},
+      {t: "You already knew they were good, but still feel validated", e: 2, a: 2},
+      {t: "You start wondering if you should buy more of the same brand", e: 3, a: 1},
+      {t: "You feel a mild anxiety that now people are noticing you", e: 1, a: 1}
+    ]
+  },
+  {
+    q: "You’re in a group deciding where to eat. You…",
+    opts: [
+      {t: "Have a clear preference but go with the group", e: 1, a: 3},
+      {t: "Quietly research the highest-rated place nearby", e: 2, a: 2},
+      {t: "Suggest the place that will make the group look the best on Instagram", e: 4, a: 0},
+      {t: "Say ‘I don’t care’ even though you do", e: 0, a: 1}
+    ]
+  },
+  {
+    q: "You finish a book that most people haven’t heard of. You…",
+    opts: [
+      {t: "Keep it to yourself as a private pleasure", e: 0, a: 4},
+      {t: "Mention it casually if it comes up naturally", e: 1, a: 3},
+      {t: "Post a photo of the cover with a thoughtful caption", e: 3, a: 1},
+      {t: "Recommend it aggressively to everyone", e: 2, a: 2}
+    ]
+  },
+  {
+    q: "Someone cuts in line in front of you. You…",
+    opts: [
+      {t: "Say something calmly and directly", e: 2, a: 3},
+      {t: "Let it go and simmer inside", e: 0, a: 2},
+      {t: "Make a loud sarcastic comment for the crowd", e: 3, a: 1},
+      {t: "Film it for potential social media justice", e: 4, a: 0}
+    ]
+  },
+  {
+    q: "You’re invited to a costume party. You…",
+    opts: [
+      {t: "Go as something clever that requires explanation", e: 2, a: 3},
+      {t: "Go as something easy and classic", e: 1, a: 2},
+      {t: "Spend days crafting an elaborate, photogenic look", e: 4, a: 1},
+      {t: "Show up in regular clothes and call it ‘ironic’", e: 2, a: 1}
+    ]
+  },
+  {
+    q: "A coworker takes credit for your idea in a meeting. You…",
+    opts: [
+      {t: "Address it privately later", e: 2, a: 3},
+      {t: "Correct them on the spot, calmly", e: 3, a: 3},
+      {t: "Let it slide to avoid conflict", e: 0, a: 2},
+      {t: "Start documenting everything for future leverage", e: 3, a: 1}
+    ]
+  },
+  {
+    q: "You see a trend you actually like. You…",
+    opts: [
+      {t: "Adopt it quietly without announcing it", e: 1, a: 3},
+      {t: "Wait until it’s slightly less popular", e: 2, a: 2},
+      {t: "Dive in fully and become an early evangelist", e: 3, a: 1},
+      {t: "Reject it on principle even if you like it", e: 2, a: 1}
+    ]
+  },
+  {
+    q: "Someone asks you for career advice. You give…",
+    opts: [
+      {t: "Honest, slightly uncomfortable truths", e: 1, a: 4},
+      {t: "Safe, encouraging platitudes", e: 1, a: 1},
+      {t: "Whatever makes you sound the most successful", e: 4, a: 0},
+      {t: "A story about how you ‘hustled’", e: 3, a: 1}
+    ]
+  },
+  {
+    q: "You’re alone in an elevator with a stranger for 20 floors. You…",
+    opts: [
+      {t: "Stay silent and stare at the numbers", e: 0, a: 3},
+      {t: "Make one low-stakes comment about the weather or music", e: 1, a: 3},
+      {t: "Try to start a real conversation", e: 2, a: 2},
+      {t: "Pull out your phone immediately", e: 1, a: 1}
+    ]
+  },
+  {
+    q: "You receive a gift you don’t like. You…",
+    opts: [
+      {t: "Thank them sincerely and never use it", e: 1, a: 3},
+      {t: "Regift it later without telling anyone", e: 2, a: 2},
+      {t: "Post a photo of it with forced enthusiasm", e: 3, a: 0},
+      {t: "Honestly say it’s not quite your style", e: 2, a: 4}
+    ]
+  },
+  {
+    q: "A friend is clearly going through something but hasn’t said anything. You…",
+    opts: [
+      {t: "Ask them directly, one-on-one", e: 1, a: 4},
+      {t: "Wait for them to bring it up", e: 0, a: 2},
+      {t: "Post a vague supportive story hoping they see it", e: 3, a: 1},
+      {t: "Tell mutual friends so everyone can ‘be there’", e: 2, a: 1}
+    ]
+  },
+  {
+    q: "You’re choosing a new phone case. Priority is…",
+    opts: [
+      {t: "Protection and function", e: 1, a: 3},
+      {t: "Something that looks expensive or rare", e: 3, a: 1},
+      {t: "Something that signals a specific subculture", e: 2, a: 2},
+      {t: "Whatever is currently trending", e: 4, a: 0}
+    ]
+  },
+  {
+    q: "Someone mispronounces your name slightly. You…",
+    opts: [
+      {t: "Correct them once, gently", e: 1, a: 3},
+      {t: "Let it go forever", e: 0, a: 2},
+      {t: "Correct them every single time", e: 2, a: 2},
+      {t: "Start introducing yourself with extra emphasis", e: 3, a: 1}
+    ]
+  },
+  {
+    q: "You have an unpopular opinion about a popular show. You…",
+    opts: [
+      {t: "Share it only with people who can handle disagreement", e: 1, a: 4},
+      {t: "Keep it completely to yourself", e: 0, a: 3},
+      {t: "Post a long thread explaining why everyone is wrong", e: 4, a: 1},
+      {t: "Pretend you like it to keep the peace", e: 2, a: 0}
+    ]
+  },
+  {
+    q: "You’re at a concert and the band plays a deep cut. You…",
+    opts: [
+      {t: "Lose your mind because you actually know it", e: 1, a: 4},
+      {t: "Enjoy it but feel slightly left out", e: 1, a: 2},
+      {t: "Film it and caption ‘this one is for the real ones’", e: 3, a: 1},
+      {t: "Wait for the hits", e: 0, a: 1}
+    ]
+  },
+  {
+    q: "A new café opens that looks very Instagrammable. You…",
+    opts: [
+      {t: "Go if the coffee is actually good", e: 1, a: 3},
+      {t: "Go mainly to take photos", e: 4, a: 0},
+      {t: "Avoid it on principle", e: 2, a: 2},
+      {t: "Go once, post once, never return", e: 3, a: 1}
+    ]
+  },
+  {
+    q: "You’re asked to describe your personal style. You say…",
+    opts: [
+      {t: "Whatever feels right that day", e: 0, a: 4},
+      {t: "A specific aesthetic with a name", e: 2, a: 2},
+      {t: "Something that sounds intentional and curated", e: 3, a: 1},
+      {t: "‘I don’t really think about it’", e: 1, a: 3}
+    ]
+  },
+  {
+    q: "You accidentally like a very old photo while stalking someone. You…",
+    opts: [
+      {t: "Immediately unlike and hope they didn’t notice", e: 2, a: 1},
+      {t: "Own it and leave a comment", e: 1, a: 3},
+      {t: "Panic and delete the like then overthink for hours", e: 3, a: 0},
+      {t: "Leave it — life is short", e: 0, a: 4}
+    ]
+  },
+  {
+    q: "A group chat is planning something you don’t want to do. You…",
+    opts: [
+      {t: "Say no clearly and suggest an alternative", e: 2, a: 3},
+      {t: "Ghost the chat until it dies", e: 0, a: 2},
+      {t: "Agree and then cancel last minute", e: 1, a: 1},
+      {t: "Go anyway to maintain social capital", e: 3, a: 0}
+    ]
+  },
+  {
+    q: "You find out a celebrity you liked did something problematic. You…",
+    opts: [
+      {t: "Re-evaluate and possibly stop supporting them", e: 1, a: 3},
+      {t: "Separate the art from the artist", e: 1, a: 2},
+      {t: "Make a public statement about it", e: 4, a: 1},
+      {t: "Double down and defend them", e: 3, a: 1}
+    ]
+  },
+  {
+    q: "You’re choosing a username for a new account. Priority is…",
+    opts: [
+      {t: "Something you’ve used for years", e: 0, a: 4},
+      {t: "Something clever or ironic", e: 2, a: 2},
+      {t: "Something that looks clean and professional", e: 3, a: 1},
+      {t: "Something that will get attention", e: 4, a: 0}
+    ]
+  },
+  {
+    q: "Someone asks if you’ve seen the latest viral video. You haven’t. You…",
+    opts: [
+      {t: "Admit it and ask them to explain", e: 0, a: 3},
+      {t: "Say ‘yeah’ and change the subject", e: 2, a: 1},
+      {t: "Watch it later so you can participate next time", e: 3, a: 1},
+      {t: "Feel a mild sense of superiority for not knowing", e: 1, a: 2}
+    ]
+  },
+  {
+    q: "You’re given the chance to speak at a small event. You…",
+    opts: [
+      {t: "Accept if you actually have something to say", e: 2, a: 3},
+      {t: "Accept mainly for the exposure", e: 4, a: 0},
+      {t: "Decline because public speaking isn’t your thing", e: 0, a: 3},
+      {t: "Accept and over-prepare to the point of exhaustion", e: 3, a: 1}
+    ]
+  },
+  {
+    q: "A friend starts dressing very differently overnight. You…",
+    opts: [
+      {t: "Notice but don’t comment unless they bring it up", e: 0, a: 3},
+      {t: "Genuinely compliment the change", e: 1, a: 3},
+      {t: "Ask them what inspired the new look", e: 1, a: 2},
+      {t: "Wonder if they’re going through something or chasing a trend", e: 2, a: 1}
+    ]
+  },
+  {
+    q: "You have 10 minutes of free time with no obligations. You…",
+    opts: [
+      {t: "Do absolutely nothing and enjoy it", e: 0, a: 4},
+      {t: "Scroll mindlessly", e: 1, a: 1},
+      {t: "Do something productive or self-improving", e: 3, a: 2},
+      {t: "Check how your last post is performing", e: 4, a: 0}
+    ]
+  },
+  {
+    q: "Someone calls you ‘cool’ to your face. Your reaction is…",
+    opts: [
+      {t: "Slight discomfort and a deflecting joke", e: 1, a: 3},
+      {t: "Quiet internal satisfaction", e: 2, a: 2},
+      {t: "You start analyzing whether you actually are", e: 3, a: 1},
+      {t: "You lean into it immediately", e: 3, a: 0}
+    ]
+  },
+  {
+    q: "Final one: If no one was watching or judging, how would your daily life look?",
+    opts: [
+      {t: "Almost exactly the same", e: 0, a: 5},
+      {t: "Somewhat more relaxed and less curated", e: 1, a: 3},
+      {t: "Quite different — more comfortable, less impressive", e: 2, a: 2},
+      {t: "Completely unrecognizable", e: 4, a: 0}
+    ]
+  }
+];
+
+const archetypes = [
+  {name: "Cool", x: 1.8, y: 9.1, desc: "Effortlessly high authenticity. You simply exist and people notice."},
+  {name: "Artist", x: 2.8, y: 8.6, desc: "Creative and comfortable in your own skin. The work matters more than the image."},
+  {name: "Skater", x: 4.0, y: 8.1, desc: "Independent energy with just enough edge. You do it for the feeling, not the feed."},
+  {name: "Thespian", x: 5.5, y: 8.0, desc: "Expressive and authentic. Performance is part of who you are, not a mask."},
+  {name: "Musician (Average)", x: 5.2, y: 7.6, desc: "Creative with moderate effort. You’re in the scene without needing to own it."},
+  {name: "Game-dev", x: 4.5, y: 7.5, desc: "Builder energy. You make things because the process itself is the reward."},
+  {name: "Gangster", x: 6.8, y: 7.6, desc: "High status awareness mixed with genuine presence. Dangerous mix."},
+  {name: "Tech/Nerd", x: 2.3, y: 7.2, desc: "Deep into your interests. Social status is mostly irrelevant to you."},
+  {name: "Gamer", x: 3.7, y: 6.4, desc: "Immersed in virtual worlds. Real-world performance is secondary."},
+  {name: "Stoner", x: 0.8, y: 6.0, desc: "Low effort, decent authenticity. You’re just floating through."},
+  {name: "Prep", x: 4.8, y: 5.7, desc: "Polished and socially aware without full desperation."},
+  {name: "Business Guy", x: 7.2, y: 6.1, desc: "Status-conscious but still somewhat grounded."},
+  {name: "Influencer", x: 9.5, y: 5.6, desc: "High effort for visibility. Authenticity is carefully managed."},
+  {name: "Jock", x: 6.0, y: 4.9, desc: "Competitive and image-aware. Results matter."},
+  {name: "Parent", x: 6.2, y: 4.2, desc: "Authority and responsibility shape you. Control is part of the role."},
+  {name: "Trustfund Kid", x: 1.8, y: 4.3, desc: "Low effort by design. Privilege does a lot of the heavy lifting."},
+  {name: "Player", x: 4.3, y: 3.8, desc: "Socially strategic. Connection is often a means to an end."},
+  {name: "Tryhard", x: 9.2, y: 4.0, desc: "Maximum effort, visible strain. You’re working very hard at being seen."},
+  {name: "Hipster", x: 5.7, y: 3.2, desc: "Ironically detached. Authenticity is performed through rejection of the mainstream."},
+  {name: "Preacher", x: 7.5, y: 3.5, desc: "Moral status seeking. You need others to hear the message."},
+  {name: "Ne'er-do-well", x: 1.5, y: 3.5, desc: "Low ambition, moderate comfort. You’re not trying and not pretending otherwise."},
+  {name: "Hermit", x: 1.2, y: 2.8, desc: "Withdrawal as lifestyle. The world is optional."},
+  {name: "Scammer", x: 7.7, y: 2.8, desc: "High effort for personal gain with low regard for sincerity."},
+  {name: "Sell-out", x: 8.0, y: 2.5, desc: "You traded something real for something shiny."},
+  {name: "Politician", x: 8.7, y: 2.6, desc: "Image management is a full-time job. Truth is flexible."},
+  {name: "Quidnunc", x: 6.5, y: 2.0, desc: "Gossip and information as currency. You need to know and be known."},
+  {name: "Poser", x: 8.0, y: 1.1, desc: "Heavy investment in appearance with very little underneath."},
+  {name: "Snitch", x: 8.5, y: 1.5, desc: "Loyalty is conditional. Information is power."},
+  {name: "Nazi", x: 10.0, y: 0.1, desc: "Maximum desperation for belonging and status through ideology. Bottom of the barrel."}
+];
+
+let current = 0;
+let answers = new Array(questions.length).fill(null);
+
+function render() {
+  const q = questions[current];
+  document.getElementById('questionText').textContent = `${current + 1}. ${q.q}`;
+  const optsDiv = document.getElementById('options');
+  optsDiv.innerHTML = '';
+  
+  q.opts.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'option' + (answers[current] === i ? ' selected' : '');
+    div.textContent = opt.t;
+    div.onclick = () => select(i);
+    optsDiv.appendChild(div);
+  });
+  
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = answers[current] === null;
+  document.getElementById('nextBtn').textContent = current === questions.length - 1 ? 'See Result' : 'Next';
+  
+  const pct = ((current) / questions.length) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+}
+
+function select(i) {
+  answers[current] = i;
+  render();
+}
+
+document.getElementById('nextBtn').onclick = () => {
+  if (current < questions.length - 1) {
+    current++;
+    render();
+  } else {
+    calculate();
+  }
+};
+
+document.getElementById('prevBtn').onclick = () => {
+  if (current > 0) {
+    current--;
+    render();
+  }
+};
+
+function calculate() {
+  let totalE = 0;
+  let totalA = 0;
+  
+  answers.forEach((ans, i) => {
+    totalE += questions[i].opts[ans].e;
+    totalA += questions[i].opts[ans].a;
+  });
+  
+  const effort = Math.min(10, Math.max(0, (totalE / 32) * 3.2));
+  const auth = Math.min(10, Math.max(0, (totalA / 32) * 2.8));
+  
+  const raw = (auth * 0.65) + ((10 - effort) * 0.35);
+  const coolness = Math.round(Math.min(100, Math.max(1, raw * 10)));
+  
+  let closest = archetypes[0];
+  let minDist = Infinity;
+  
+  archetypes.forEach(arch => {
+    const dist = Math.sqrt((arch.x - effort)**2 + (arch.y - auth)**2);
+    if (dist < minDist) {
+      minDist = dist;
+      closest = arch;
+    }
+  });
+  
+  document.getElementById('quizCard').style.display = 'none';
+  document.getElementById('resultCard').style.display = 'block';
+  document.getElementById('finalLabel').textContent = closest.name;
+  document.getElementById('coolnessScore').textContent = coolness;
+  document.getElementById('effortScore').textContent = effort.toFixed(1);
+  document.getElementById('authScore').textContent = auth.toFixed(1);
+  document.getElementById('labelDesc').textContent = closest.desc;
+  document.getElementById('progress').style.width = '100%';
+  
+  // Draw the matrix
+  drawMatrix(effort, auth, closest.name);
+}
+
+function drawMatrix(userX, userY, userLabel) {
+  const canvas = document.getElementById('matrixCanvas');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+  
+  // Clear
+  ctx.fillStyle = '#0d0d14';
+  ctx.fillRect(0, 0, w, h);
+  
+  // Margins
+  const margin = {top: 40, right: 30, bottom: 50, left: 55};
+  const plotW = w - margin.left - margin.right;
+  const plotH = h - margin.top - margin.bottom;
+  
+  // Scale functions
+  const xScale = (x) => margin.left + (x / 10) * plotW;
+  const yScale = (y) => margin.top + plotH - (y / 10) * plotH;
+  
+  // Cool Zone (green)
+  ctx.fillStyle = 'rgba(110, 231, 183, 0.15)';
+  ctx.fillRect(xScale(0), yScale(10), xScale(5.5) - xScale(0), yScale(5.5) - yScale(10));
+  ctx.strokeStyle = '#34d399';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 4]);
+  ctx.strokeRect(xScale(0), yScale(10), xScale(5.5) - xScale(0), yScale(5.5) - yScale(10));
+  ctx.setLineDash([]);
+  
+  // Lame Zone (red)
+  ctx.fillStyle = 'rgba(248, 113, 113, 0.12)';
+  ctx.fillRect(xScale(5.5), yScale(4.5), xScale(10) - xScale(5.5), yScale(0) - yScale(4.5));
+  ctx.strokeStyle = '#f87171';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 4]);
+  ctx.strokeRect(xScale(5.5), yScale(4.5), xScale(10) - xScale(5.5), yScale(0) - yScale(4.5));
+  ctx.setLineDash([]);
+  
+  // Grid
+  ctx.strokeStyle = '#2a2a38';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 10; i++) {
+    ctx.beginPath();
+    ctx.moveTo(xScale(i), margin.top);
+    ctx.lineTo(xScale(i), h - margin.bottom);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(margin.left, yScale(i));
+    ctx.lineTo(w - margin.right, yScale(i));
+    ctx.stroke();
+  }
+  
+  // Zone labels
+  ctx.fillStyle = '#34d399';
+  ctx.font = 'bold 13px Inter';
+  ctx.fillText('THE COOL ZONE', xScale(1.2), yScale(9.6));
+  
+  ctx.fillStyle = '#f87171';
+  ctx.fillText('THE LAME ZONE', xScale(6.8), yScale(1.8));
+  
+  // Axis labels
+  ctx.fillStyle = '#9ca3af';
+  ctx.font = '12px Inter';
+  ctx.textAlign = 'center';
+  ctx.fillText('Effort / Desperation for Status →', w / 2, h - 12);
+  
+  ctx.save();
+  ctx.translate(18, h / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Authenticity / Comfort in Skin ↑', 0, 0);
+  ctx.restore();
+  
+  // Draw all archetypes as small dots
+  archetypes.forEach(a => {
+    ctx.beginPath();
+    ctx.arc(xScale(a.x), yScale(a.y), 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#60a5fa';
+    ctx.fill();
+  });
+  
+  // Draw user position (big glowing circle)
+  const ux = xScale(userX);
+  const uy = yScale(userY);
+  
+  // Glow
+  ctx.beginPath();
+  ctx.arc(ux, uy, 14, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(110, 231, 183, 0.25)';
+  ctx.fill();
+  
+  // Main circle
+  ctx.beginPath();
+  ctx.arc(ux, uy, 8, 0, Math.PI * 2);
+  ctx.fillStyle = '#6ee7b7';
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // User label
+  ctx.fillStyle = '#6ee7b7';
+  ctx.font = 'bold 13px Inter';
+  ctx.textAlign = 'left';
+  ctx.fillText('YOU → ' + userLabel, ux + 14, uy + 4);
+}
+
+render();
+</script>
+</body>
+</html>
