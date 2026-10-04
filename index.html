@@ -179,7 +179,31 @@
     font-size: 1.05rem;
     line-height: 1.5;
     margin-top: 12px;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
+  }
+  
+  .suggestions {
+    text-align: left;
+    background: #16161f;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 24px 0;
+  }
+  
+  .suggestions h3 {
+    font-size: 1.1rem;
+    margin-bottom: 14px;
+    color: var(--accent);
+  }
+  
+  .suggestions ol {
+    padding-left: 20px;
+  }
+  
+  .suggestions li {
+    margin-bottom: 12px;
+    line-height: 1.45;
+    color: #d1d5db;
   }
   
   .matrix-container {
@@ -244,6 +268,12 @@
     </div>
     <p class="label-desc" id="labelDesc"></p>
     
+    <!-- Suggestions Section -->
+    <div class="suggestions" id="suggestionsBox">
+      <h3>3 ways to lean into this & find your people</h3>
+      <ol id="suggestionsList"></ol>
+    </div>
+    
     <div class="matrix-container">
       <div class="matrix-title">Your position on the Matrix</div>
       <canvas id="matrixCanvas" width="640" height="480"></canvas>
@@ -254,6 +284,158 @@
 </div>
 
 <script>
+/* ============================================================
+   EASY TO EDIT SECTION
+   Just change the 3 strings under each archetype name.
+   ============================================================ */
+const suggestions = {
+  "Cool": [
+    "Protect your low-effort authenticity — say no to things that feel forced. Your calm presence is the rarest currency.",
+    "Spend time in places where status signaling is low (independent cafés, small creative scenes, late-night walks). You’ll attract similar energy without trying.",
+    "When people ask for advice, give it sparsely and honestly. Your restraint makes the few things you do say land harder."
+  ],
+  "Artist": [
+    "Schedule unprotected creative time every week and treat it as non-negotiable. The work itself is the networking.",
+    "Show unfinished work more often. Other serious artists bond over process, not polished results.",
+    "Find or start a small critique circle (3–5 people max). Depth beats big networking events for your type."
+  ],
+  "Skater": [
+    "Go to the actual spots at off-peak hours. Real connections happen when the cameras are gone.",
+    "Offer to film or edit for others without asking for credit. Skate culture still runs on unspoken reciprocity.",
+    "Travel to one new city or DIY event this year purely for the session. Shared physical risk builds fast trust."
+  ],
+  "Thespian": [
+    "Take classes or workshops outside your usual circle — different methods force growth and new collaborators.",
+    "Host small reading nights or scene study sessions at home. Intimate settings filter for the serious ones.",
+    "Document the process (not just the performance). Other performers respect the craft more than the spotlight."
+  ],
+  "Musician (Average)": [
+    "Play open mics and house shows more than polished venues. That’s where the real musicians still hang.",
+    "Collaborate on one song this month with someone whose style is different from yours. Cross-pollination is growth.",
+    "Join or create a low-pressure weekly jam. Consistency beats networking events for musicians."
+  ],
+  "Game-dev": [
+    "Ship small experimental projects publicly. Other builders respect finished (even tiny) things more than ideas.",
+    "Join a game jam this season and treat it as both practice and networking. Shared deadlines create bonds fast.",
+    "Hang out in the quieter corners of Discord or local meetups — the best conversations happen after the hype dies."
+  ],
+  "Gangster": [
+    "Be extremely selective about who gets access to your real life. Scarcity of access is part of the appeal.",
+    "Move in circles where competence is respected more than talk. Quiet competence attracts the right people.",
+    "When you do help someone, do it cleanly and without fanfare. Reputation compounds in silence."
+  ],
+  "Tech/Nerd": [
+    "Contribute to one open-source project or niche forum regularly. Depth of knowledge is your social proof.",
+    "Attend smaller, topic-specific meetups instead of big tech conferences. Quality of conversation is higher.",
+    "Share half-baked technical thoughts online. Other deep nerds will find you through the details."
+  ],
+  "Gamer": [
+    "Join a consistent small group (Discord or IRL) that plays the same games on a schedule. Shared campaign energy is powerful.",
+    "Start or join a low-stakes creative side project related to games (modding, streaming analysis, zine).",
+    "Go to one local LAN or smaller convention this year with the intention of meeting 3 new people, not just playing."
+  ],
+  "Stoner": [
+    "Create a low-pressure weekly hang (walks, music, cooking) that doesn’t revolve around consumption. That’s how real friends form.",
+    "Protect the people who still show up when you’re not ‘on’. Those are your actual circle.",
+    "Find one physical activity you can do half-baked and still enjoy. Movement + low ambition is a strong combo."
+  ],
+  "Prep": [
+    "Lean into being reliable and put-together — it’s a real social skill. Just don’t let it become your only personality.",
+    "Invite people to low-key, well-organized things. Good logistics attract other competent people.",
+    "Occasionally break your own image on purpose. Controlled chaos keeps you from becoming too polished."
+  ],
+  "Business Guy": [
+    "Build genuine relationships before you need them. The best deals come from people who already trust you.",
+    "Share credit aggressively. It costs almost nothing and compounds reputation fast.",
+    "Find one peer group that talks about money and power without the LinkedIn performance."
+  ],
+  "Influencer": [
+    "Start creating some content that has zero chance of going viral. It keeps you sane and attracts real peers.",
+    "Meet people offline without filming. The ones who still want to hang are the valuable ones.",
+    "Publicly credit smaller creators often. It builds goodwill that algorithms can’t give you."
+  ],
+  "Jock": [
+    "Train with people slightly better than you. Shared physical progress creates strong bonds.",
+    "Compete in something low-stakes this year just for the experience of being a beginner again.",
+    "Be the person who organizes the post-game hang. Leadership off the field is rarer."
+  ],
+  "Parent": [
+    "Find other parents who still have their own interests. Parenting alone is not a complete identity.",
+    "Protect one weekly block that is only for you — no negotiations. Modeling boundaries is useful for everyone.",
+    "Connect with people who knew you before kids. They help keep the older version of you alive."
+  ],
+  "Trustfund Kid": [
+    "Use your freedom to take real risks that people with less cushion can’t. That’s the actual advantage.",
+    "Spend time with people who have to grind. It calibrates your sense of reality and effort.",
+    "Create or fund something that would exist even if the money disappeared tomorrow."
+  ],
+  "Player": [
+    "Practice being interesting without the end goal of conquest. It upgrades the quality of people you attract.",
+    "Build a small circle of people who know the real version of you. Performance is exhausting long-term.",
+    "Occasionally choose the honest option when the strategic one is easier. It builds unexpected depth."
+  ],
+  "Tryhard": [
+    "Deliberately do one thing this month with zero documentation or optimization. Feel what pure presence is like.",
+    "Find people who are good at things you’re bad at and just listen. It lowers the constant performance pressure.",
+    "Publicly celebrate someone else’s win without tying it back to yourself. It’s a muscle worth building."
+  ],
+  "Hipster": [
+    "Like something mainstream out loud once in a while. It confuses the right people and attracts the interesting ones.",
+    "Go deeper into one interest instead of collecting new ones. Depth is rarer than taste.",
+    "Spend time with people who don’t care about being ahead of the curve. It’s clarifying."
+  ],
+  "Preacher": [
+    "Listen more than you speak for one full week. The people worth influencing will still be there.",
+    "Share doubt publicly once in a while. Certainty is less magnetic than honest struggle.",
+    "Find peers who will challenge your framework instead of just agreeing. Iron sharpens iron."
+  ],
+  "Ne'er-do-well": [
+    "Pick one small consistent thing (even tiny) and keep doing it. Momentum is more useful than motivation.",
+    "Hang around people who are building something. Proximity slowly changes what feels normal.",
+    "Be honest about your lack of ambition with the right people — some will find it refreshing."
+  ],
+  "Hermit": [
+    "Schedule one low-pressure social thing per month and treat it as an experiment, not a requirement.",
+    "Share writing, music, or thoughts asynchronously. Many hermits connect better that way.",
+    "Find one person who respects your need for space. Quality over quantity is already your strength."
+  ],
+  "Scammer": [
+    "Try building something that only works if people are better off after interacting with you. It’s a harder game.",
+    "Find operators who play long-term. Short-term extraction eventually runs out of targets.",
+    "Be radically transparent with a small trusted circle. The cognitive load of constant framing is heavy."
+  ],
+  "Sell-out": [
+    "Do one project this year that has no commercial potential. It reminds you what the original spark felt like.",
+    "Reconnect with people from before the compromises. They remember the earlier version of you.",
+    "Publicly admit one trade-off you made. Honesty about selling out is strangely magnetic."
+  ],
+  "Politician": [
+    "Have conversations where you have nothing to gain. It keeps the real social muscles alive.",
+    "Find one domain where you can be incompetent and still participate. Status addiction needs counterweights.",
+    "Support someone else’s rise without attaching your name. Clean generosity is rare in political circles."
+  ],
+  "Quidnunc": [
+    "Practice knowing something interesting and not sharing it. Restraint is a higher form of power.",
+    "Spend more time making things than commenting on them. Creators eventually outrank observers.",
+    "Build relationships based on mutual making instead of mutual information."
+  ],
+  "Poser": [
+    "Go one full month without posting about the identity you’re performing. See what’s left.",
+    "Spend time with people who already have the thing you’re signaling. Proximity exposes gaps fast.",
+    "Learn one skill deeply enough that you no longer need the costume."
+  ],
+  "Snitch": [
+    "Practice radical loyalty with a very small number of people. Trust is a better long-term strategy.",
+    "When you have damaging information, sit with it longer before acting. Most urgency is manufactured.",
+    "Build a reputation for discretion. People eventually pay more for silence than for secrets."
+  ],
+  "Nazi": [
+    "Leave the ideology. Seriously. The belonging it offers is fake and the cost is enormous.",
+    "Find communities built around actual skills, crafts, or mutual aid instead of grievance.",
+    "Talk to people you were taught to hate — in person, without an agenda. Reality is a strong solvent."
+  ]
+};
+
 const questions = [
   {
     q: "You’re at a party. Someone starts playing a song you’ve never heard. What’s your move?",
@@ -658,6 +840,20 @@ function calculate() {
   document.getElementById('labelDesc').textContent = closest.desc;
   document.getElementById('progress').style.width = '100%';
   
+  // Populate suggestions
+  const list = document.getElementById('suggestionsList');
+  list.innerHTML = '';
+  const tips = suggestions[closest.name] || [
+    "Lean into what already feels natural to you.",
+    "Seek out people who operate at a similar energy level.",
+    "Protect the parts of yourself that feel most true."
+  ];
+  tips.forEach(tip => {
+    const li = document.createElement('li');
+    li.textContent = tip;
+    list.appendChild(li);
+  });
+  
   // Draw the matrix
   drawMatrix(effort, auth, closest.name);
 }
@@ -668,20 +864,17 @@ function drawMatrix(userX, userY, userLabel) {
   const w = canvas.width;
   const h = canvas.height;
   
-  // Clear
   ctx.fillStyle = '#0d0d14';
   ctx.fillRect(0, 0, w, h);
   
-  // Margins
   const margin = {top: 40, right: 30, bottom: 50, left: 55};
   const plotW = w - margin.left - margin.right;
   const plotH = h - margin.top - margin.bottom;
   
-  // Scale functions
   const xScale = (x) => margin.left + (x / 10) * plotW;
   const yScale = (y) => margin.top + plotH - (y / 10) * plotH;
   
-  // Cool Zone (green)
+  // Cool Zone
   ctx.fillStyle = 'rgba(110, 231, 183, 0.15)';
   ctx.fillRect(xScale(0), yScale(10), xScale(5.5) - xScale(0), yScale(5.5) - yScale(10));
   ctx.strokeStyle = '#34d399';
@@ -690,7 +883,7 @@ function drawMatrix(userX, userY, userLabel) {
   ctx.strokeRect(xScale(0), yScale(10), xScale(5.5) - xScale(0), yScale(5.5) - yScale(10));
   ctx.setLineDash([]);
   
-  // Lame Zone (red)
+  // Lame Zone
   ctx.fillStyle = 'rgba(248, 113, 113, 0.12)';
   ctx.fillRect(xScale(5.5), yScale(4.5), xScale(10) - xScale(5.5), yScale(0) - yScale(4.5));
   ctx.strokeStyle = '#f87171';
@@ -707,14 +900,13 @@ function drawMatrix(userX, userY, userLabel) {
     ctx.moveTo(xScale(i), margin.top);
     ctx.lineTo(xScale(i), h - margin.bottom);
     ctx.stroke();
-    
     ctx.beginPath();
     ctx.moveTo(margin.left, yScale(i));
     ctx.lineTo(w - margin.right, yScale(i));
     ctx.stroke();
   }
   
-  // Zone labels
+  // Labels
   ctx.fillStyle = '#34d399';
   ctx.font = 'bold 13px Inter';
   ctx.fillText('THE COOL ZONE', xScale(1.2), yScale(9.6));
@@ -722,7 +914,6 @@ function drawMatrix(userX, userY, userLabel) {
   ctx.fillStyle = '#f87171';
   ctx.fillText('THE LAME ZONE', xScale(6.8), yScale(1.8));
   
-  // Axis labels
   ctx.fillStyle = '#9ca3af';
   ctx.font = '12px Inter';
   ctx.textAlign = 'center';
@@ -734,7 +925,7 @@ function drawMatrix(userX, userY, userLabel) {
   ctx.fillText('Authenticity / Comfort in Skin ↑', 0, 0);
   ctx.restore();
   
-  // Draw all archetypes as small dots
+  // Archetype dots
   archetypes.forEach(a => {
     ctx.beginPath();
     ctx.arc(xScale(a.x), yScale(a.y), 4, 0, Math.PI * 2);
@@ -742,17 +933,15 @@ function drawMatrix(userX, userY, userLabel) {
     ctx.fill();
   });
   
-  // Draw user position (big glowing circle)
+  // User position
   const ux = xScale(userX);
   const uy = yScale(userY);
   
-  // Glow
   ctx.beginPath();
   ctx.arc(ux, uy, 14, 0, Math.PI * 2);
   ctx.fillStyle = 'rgba(110, 231, 183, 0.25)';
   ctx.fill();
   
-  // Main circle
   ctx.beginPath();
   ctx.arc(ux, uy, 8, 0, Math.PI * 2);
   ctx.fillStyle = '#6ee7b7';
@@ -761,7 +950,6 @@ function drawMatrix(userX, userY, userLabel) {
   ctx.lineWidth = 2;
   ctx.stroke();
   
-  // User label
   ctx.fillStyle = '#6ee7b7';
   ctx.font = 'bold 13px Inter';
   ctx.textAlign = 'left';
